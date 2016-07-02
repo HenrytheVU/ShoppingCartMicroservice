@@ -1,0 +1,209 @@
+<link rel="import" href="http://localhost:8080/bower_components/polymer/polymer.html">
+<link rel="import" href="http://localhost:8080/bower_components/paper-input/paper-input.html">
+<link rel="import" href="http://localhost:8080/bower_components/iron-form/iron-form.html">
+<link rel="import" href="http://localhost:8080/bower_components/paper-button/paper-button.html">
+<link rel="import" href="http://localhost:8080/bower_components/paper-card/paper-card.html">
+<link rel="import" href="http://localhost:8080/bower_components/iron-list/iron-list.html">
+<link rel="import" href="http://localhost:8080/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="http://localhost:8080/bower_components/iron-icons/iron-icons.html">
+
+<dom-module id="shopping-cart">
+
+  <template>
+    <style>
+    paper-card {
+    	padding: 10px;
+    	margin: 10px;
+    }
+    paper-button {
+    	margin-top: 20px;
+    }
+    
+    .shopping-cart {
+       	@apply(--layout-vertical);
+    }
+    .product-list-item {
+       	@apply(--layout-horizontal);
+       	background-color: #fafafa;
+       	cursor: pointer;
+    }
+    
+    .add-to-cart {
+    	right: 0px;
+    	position: absolute;
+    }
+    paper-input {
+    	margin-left: 5px;
+    	margin-right: 5px;
+    }
+    .product-id {
+    	width: 25px;
+    }
+    .product-name {
+    	width: 250px;
+    }
+    
+    .product-price {
+    	width: 70px;
+    }
+    
+    .iron-selected {
+      background: #eee;
+    }
+    .shopping-cart-total {
+    	text-align: right;
+    }
+    </style>
+    
+    
+    <paper-card class="shopping-cart" heading="SHOPPING CART">
+    <paper-button raised on-tap="refresh" ><iron-icon icon="refresh"></iron-icon></paper-button>
+	    <iron-list id="shoppingCartList" items="[[data]]" as="item" selection-enabled>
+  			<template>
+				<div tabindex$="[[tabIndex]]" on-tap="toggleDisabled">
+				
+					<paper-card class="product-list-item">
+						<paper-input 
+						class="product-id"
+				    	disabled
+				    	value=[[item.id]] 
+				    	label="ID">
+				    	</paper-input>
+						
+				    	<paper-input
+				    	disabled
+				    	class="product-name"
+				    	required
+				    	value="{{item.name::input}}" 
+				    	label="Product Name"
+				    	error-message="Product name is missing!">
+				    	</paper-input>
+				    	
+				    	<paper-input
+				    	disabled
+				    	class="product-price"
+				    	required
+				    	allowed-pattern="[^\d+(.\d{1,2})]?"
+				    	value="{{item.price::input}}" 
+				    	label="Price"
+				    	error-message="Price is missing!">
+				    	<div prefix>€</div>
+				    	</paper-input>
+		   				<paper-button disabled raised on-tap="deleteItem"><iron-icon icon="clear"></iron-icon></paper-button>
+					</paper-card>
+			    </div>
+			</template>
+		</iron-list>
+		<hr>
+		<span class="shopping-cart-total">TOTAL: € {{total}}</span>
+    </paper-card>
+    
+    
+    <iron-ajax
+    id="ajaxGetAll"
+    method='GET'
+    url="/shoppingcarts/1/items/"
+    handle-as="json"
+  	content-type="application/json"
+    on-response="handleAjaxGetAllResponse"
+    debounce-duration="300"
+    ></iron-ajax>
+    
+    <iron-ajax
+    id="ajaxDeleteOne"
+    method='DELETE'
+    url="/shoppingcarts/1/items/"
+    handle-as="json"
+  	content-type="application/json"
+  	on-response="handleDeleteOneResponse"
+    debounce-duration="300"
+    ></iron-ajax>
+    
+  </template>
+
+  <script>
+    Polymer({
+      is: 'shopping-cart',
+      
+      properties: {
+			data: {
+				type: Array,
+				value: function() {
+			    	return [];
+				}
+			},
+			total: {
+				type: Number
+			}
+        },
+        
+        ready: function() {
+        	this.refresh();
+        },
+        
+        refresh: function() {
+        	console.log("Refreshing")
+        	this.$.ajaxGetAll.generateRequest();
+        	this.setItemListDisabled();
+        },
+        
+        getTotal: function() {
+        	console.log("Getting total");
+        	var sum = 0;
+        	this.data.forEach(function(product) {
+        		sum = sum + product.price;
+        	})
+        	this.total = sum.toFixed(2);
+        	console.log(this.total);
+        },
+        
+        deleteItem: function() {
+        	console.log("Deleting item");
+            var selectedItem = this.$.shoppingCartList.selectedItem
+            console.log(selectedItem);
+			this.$.ajaxDeleteOne.body = selectedItem;
+            this.$.ajaxDeleteOne.generateRequest();
+        },
+        
+        handleAjaxGetAllResponse: function(data) {
+        	console.log("handle response");
+        	console.log(data.detail.response);
+        	this.data = data.detail.response;
+            this.async(function(){
+            	this.$.shoppingCartList.fire('iron-resize');
+            }, 10);
+            this.getTotal();
+        },
+        
+        handleUpdateOneResponse: function() {
+        	console.log("handling update response");
+        	//this.refresh();
+        },
+        
+        handleDeleteOneResponse: function() {
+        	console.log("handling delete response");
+        	this.refresh();
+        },
+        
+        toggleDisabled: function(e) {
+        	this.setItemListDisabled();
+        	var div = Polymer.dom(e).rootTarget;
+        	var buttons = div.querySelectorAll('paper-button');
+        	buttons.forEach(function(button) {
+        		var bool = button.disabled;
+        		button.disabled = !bool;
+        	});
+       	},
+       	
+       	setItemListDisabled: function() {
+        	var buttons = this.$.shoppingCartList.querySelectorAll('paper-button');
+        	buttons.forEach(function(button) {
+        		button.disabled = true;
+        	});
+       	}
+        
+      
+    });
+  </script>
+
+</dom-module>

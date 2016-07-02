@@ -1,0 +1,23 @@
+{
+  "name": "shopping-cart-service",
+  "authors": [
+    "Henry Vu <HenrytheVU@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.6.0",
+    "paper-input": "PolymerElements/paper-input#^1.1.14",
+    "iron-elements": "PolymerElements/iron-elements#^1.0.10",
+    "paper-card": "PolymerElements/paper-card#^1.1.1"
+  }
+}
