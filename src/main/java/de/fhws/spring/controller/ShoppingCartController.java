@@ -26,20 +26,14 @@ public class ShoppingCartController {
     @Inject
     ShoppingCartRepository shoppingCartRepository;
 
-    // This cannot be used by microservices with UIs
     protected RestTemplate restTemplate = new RestTemplate();
 
-    final private String serviceUrl = "http://localhost:8081";
+    final private String productServiceUrl = "http://localhost:8081";
 
     public Product getProductById(long productId) {
-	final Product product = restTemplate.getForObject(serviceUrl + "/products/{number}", Product.class, productId);
-
+	final Product product = restTemplate.getForObject(productServiceUrl + "/products/{number}", Product.class, productId);
 	if (product == null) {
-	    try {
-		throw new Exception("Cannot find product by Id: " + productId);
-	    } catch (final Exception e) {
-		e.printStackTrace();
-	    }
+	    return new Product(productId, "PRODUCT NO LONGER AVAILABLE!", 0);
 	}
 	return product;
     }
